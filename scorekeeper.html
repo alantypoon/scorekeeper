@@ -195,6 +195,24 @@
             cursor: pointer;
             margin-left: 10px;
         }
+
+        .move-btn {
+            color: #666;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            background: transparent;
+            padding: 4px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 30px;
+            text-align: center;
+        }
+
+        .move-btn:hover {
+            background: rgba(0,0,0,0.05);
+            color: #333;
+            border-color: #999;
+        }
         
         .add-player-btn {
             display: block;
@@ -418,10 +436,18 @@
 
         // Load saved data
         function loadData() {
-            const saved = localStorage.getItem('scorekeeperData');
-            if (saved) {
-                const data = JSON.parse(saved);
-                players = data.players || players;
+            try {
+                const saved = localStorage.getItem('scorekeeperData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    // Validate that we have a valid players array
+                    if (data.players && Array.isArray(data.players) && data.players.length > 0) {
+                        players = data.players;
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading saved data:', e);
+                // Keep default players if loading fails
             }
         }
 
@@ -469,7 +495,11 @@
                 <div class="settings-section">
                     <div class="section-label" style="display:flex; justify-content:space-between; align-items:center;">
                         <span>PLAYER ${index + 1} SETTINGS</span>
-                        ${players.length > 1 ? `<button class="remove-player-btn" onclick="removePlayer(${index})">Remove</button>` : ''}
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            ${index > 0 ? `<button class="move-btn" onclick="movePlayer(${index}, -1)">↑</button>` : '<div style="width:30px"></div>'}
+                            ${index < players.length - 1 ? `<button class="move-btn" onclick="movePlayer(${index}, 1)">↓</button>` : '<div style="width:30px"></div>'}
+                            ${players.length > 1 ? `<button class="remove-player-btn" onclick="removePlayer(${index})">Remove</button>` : ''}
+                        </div>
                     </div>
                     <div class="settings-card">
                         <div class="player-settings-title" style="color: ${player.color}">Player ${index + 1}</div>
@@ -568,6 +598,21 @@
             saveData();
             renderGame();
             renderSettings();
+        }
+
+        function movePlayer(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= players.length) return;
+            
+            // Swap
+            const temp = players[index];
+            players[index] = players[newIndex];
+            players[newIndex] = temp;
+            
+            playSound();
+            saveData();
+            renderGame(); // Updates the main game view order
+            renderSettings(); // Updates the settings list order
         }
 
         // Toggle Settings
