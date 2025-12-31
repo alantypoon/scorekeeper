@@ -102,13 +102,20 @@
             text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .score-buttons {
+        /* .score-buttons { display: flex; gap: 10px; }  // legacy, replaced by .score-buttons-row */
+        .score-buttons-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .score-row {
             display: flex;
             gap: 10px;
+            justify-content: center;
         }
 
         .score-btn {
-            padding: 15px 30px;
+            padding: 15px 0;
             font-size: 24px;
             font-weight: bold;
             border: none;
@@ -117,6 +124,9 @@
             cursor: pointer;
             transition: transform 0.1s, box-shadow 0.1s;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            min-width: 120px;
+            text-align: center;
+            flex: 1 1 0;
         }
 
         .score-btn:hover {
@@ -533,9 +543,15 @@
                         <div class="player-score" id="score-${index}">${player.score}</div>
                         <div class="player-controls">
                             <button class="minus-btn" onclick="addScore(${index}, -1)">−</button>
-                            <div class="score-buttons">
-                                <button class="score-btn" onclick="addScore(${index}, 1)">+1</button>
-                                <button class="score-btn" onclick="addScore(${index}, 1.5)">+1.5</button>
+                            <div class="score-buttons-row">
+                                <div class="score-row">
+                                    <button class="score-btn" onclick="addScore(${index}, -0.5)">-0.5</button>
+                                    <button class="score-btn" onclick="addScore(${index}, 0.5)">+0.5</button>
+                                </div>
+                                <div class="score-row">
+                                    <button class="score-btn" onclick="addScore(${index}, 1)">+1</button>
+                                    <button class="score-btn" onclick="addScore(${index}, 1.5)">+1.5</button>
+                                </div>
                             </div>
                         </div>
                     </div>
