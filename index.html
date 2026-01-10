@@ -506,35 +506,59 @@
             '#9B59B6', '#E91E63', '#F1C40F', '#95A5A6'
         ];
 
-        // Audio Context for sound effects
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Audio Context for sound effects (created lazily for iOS compatibility)
+        let audioCtx = null;
+        let isAudioReady = false;
         
-        function playSound() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            // Sweet Major Pentatonic Scale (C5, D5, E5, G5, A5, C6)
-            // Randomly picking a note makes interaction feel musical and less repetitive
-            const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
-            const frequency = notes[Math.floor(Math.random() * notes.length)];
-            
-            // "Chime" sound
-            oscillator.type = 'sine'; // Sine waves are pure and sweet
-            oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-            
-            const now = audioCtx.currentTime;
-            // Gentle bell-like envelope
-            gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(0.3, now + 0.02); // Quick soft attack
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5); // Long smooth release
-            
-            oscillator.start(now);
-            oscillator.stop(now + 0.5);
+        async function playSound() {
+            try {
+                // Create AudioContext lazily on first user interaction (required for iOS)
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    console.log('AudioContext created, state:', audioCtx.state);
+                }
+                
+                // Resume if suspended (iOS requirement) - MUST await for iOS
+                if (audioCtx.state === 'suspended') {
+                    console.log('Resuming suspended AudioContext');
+                    await audioCtx.resume();
+                    console.log('AudioContext resumed, state:', audioCtx.state);
+                }
+                
+                // Only play if context is running
+                if (audioCtx.state !== 'running') {
+                    console.warn('AudioContext not running, state:', audioCtx.state);
+                    return;
+                }
+                
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                // Sweet Major Pentatonic Scale (C5, D5, E5, G5, A5, C6)
+                // Randomly picking a note makes interaction feel musical and less repetitive
+                const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+                const frequency = notes[Math.floor(Math.random() * notes.length)];
+                
+                // "Chime" sound
+                oscillator.type = 'sine'; // Sine waves are pure and sweet
+                oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+                
+                const now = audioCtx.currentTime;
+                // Gentle bell-like envelope
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.3, now + 0.02); // Quick soft attack
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5); // Long smooth release
+                
+                oscillator.start(now);
+                oscillator.stop(now + 0.5);
+                
+                console.log('Sound played, frequency:', frequency);
+            } catch (e) {
+                console.error('Error playing sound:', e);
+            }
         }
 
         let players = [
